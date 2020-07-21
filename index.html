@@ -1,19 +1,33 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <title>YAML Editor</title>
     <script src="https://unpkg.com/vue"></script>
     <script src="https://unpkg.com/lodash"></script>
-    <!--script type="module">import { YAML } from 'https://unpkg.com/yaml@1/browser/dist/index.js'; window.YAML = YAML</script-->
+    <!--script type="module">import { YAML } from 'https://unpkg.com/yaml/browser/dist/index.js'; window.YAML = YAML</script-->
   </head>
 
   <body>
-    <div id="editor">
-      <div id="yaml">
+
+    <div id="editor-1" class="editor">
+      <title>{{ title }}</title>
+
+      <h2>{{ title }}</h2>
+
+      <div class="yaml">
+        <h3>YAML input</h3>
         <textarea ref="input" :value="input" @input="update" v-focus></textarea>
       </div>
-      <div id="json">
+
+      <div class="json">
+        <h3>JSON output</h3>
         <pre v-html="json"></pre>
+      </div>
+
+      <div class="info">
+        Edit the <a href="https://yaml.org/">YAML</a> input on the left.<br/>
+        It will be loaded into memory and stringified to <a href="https://www.json.org/json-en.html">JSON</a> on the right.<br/>
+	This editor currently uses Javascript <a href="https://www.npmjs.com/package/yaml">NPM "yaml" module</a>.<br/>
+	The source code for this editor is a single HTML page on <a href="https://github.com/yaml/yaml-interactive/tree/master/index.html">GitHub</a>.<br/>
       </div>
     </div>
 
@@ -23,21 +37,25 @@
 	inserted: function (el) { el.focus(); },
       })
       new Vue({
-        el: "#editor",
+        el: "#editor-1",
         data: {
+          title: 'YAML Interactive Editor',
           input: 'foo: 123\nbar: 456\n',
           error: '',
         },
         computed: {
           json: function() {
-            var node;
+            var json;
             try {
-              node = YAML.parse(this.input);
+              json = YAML.parseAllDocuments(this.input).map(function(doc) {
+                if (doc.errors.length !== 0) throw doc.errors[0];
+                return JSON.stringify(doc.toJSON(), null, 2) + '\n';
+              }).join('');
             }
             catch(err) {
-              return '<span style="color:red">' + err + '</span>';
+              json = '<span style="color:red">' + err + '</span>';
             }
-            return JSON.stringify(node, null, 2);
+            return json;
           }
         },
         methods: {
@@ -49,10 +67,29 @@
     </script>
 
     <style>
-      textarea, pre {
-        float: left;
+      h3 { margin-bottom: 5px; }
+      div.editor {
+        clear: both:
+      }
+      div.yaml, div.json {
         height: 300px;
         width: 400px;
+        float: left;
+      }
+      div.yaml {
+      }
+      div.json {
+        margin-left: 10px;
+      }
+      div.info {
+        clear: both;
+        position: relative;
+        padding-top: 100px;
+        width: 800px;
+      }
+      textarea, pre {
+        height: 100%;
+        width: calc(100% - 10px);
         border: 2px solid black;
         padding: 5px;
         font-size: 12pt;
@@ -63,9 +100,12 @@
       }
       pre {
         margin-top: 0;
-        margin-left: 10px;
         overflow-x: auto;
         white-space: pre-wrap;
+      }
+      a {
+        text-decoration: none;
+        color: blue;
       }
     </style>
   </body>
