@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>YAML Editor</title>
+    <script src="https://unpkg.com/vue"></script>
+    <script src="https://unpkg.com/lodash"></script>
+    <!--script type="module">import { YAML } from 'https://unpkg.com/yaml@1/browser/dist/index.js'; window.YAML = YAML</script-->
+  </head>
+
+  <body>
+    <div id="editor">
+      <div id="yaml">
+        <textarea ref="input" :value="input" @input="update" v-focus></textarea>
+      </div>
+      <div id="json">
+        <pre v-html="json"></pre>
+      </div>
+    </div>
+
+    <script type="module">
+      import { YAML } from 'https://unpkg.com/yaml/browser/dist/index.js';
+      Vue.directive('focus', {
+	inserted: function (el) { el.focus(); },
+      })
+      new Vue({
+        el: "#editor",
+        data: {
+          input: 'foo: 123\nbar: 456\n',
+          error: '',
+        },
+        computed: {
+          json: function() {
+            var node;
+            try {
+              node = YAML.parse(this.input);
+            }
+            catch(err) {
+              return '<span style="color:red">' + err + '</span>';
+            }
+            return JSON.stringify(node, null, 2);
+          }
+        },
+        methods: {
+          update: _.debounce(function(e) {
+            this.input = e.target.value;
+          }, 500),
+        }
+      });
+    </script>
+
+    <style>
+      textarea, pre {
+        float: left;
+        height: 300px;
+        width: 400px;
+        border: 2px solid black;
+        padding: 5px;
+        font-size: 12pt;
+      }
+      textarea {
+        overflow-x: scroll;
+        white-space: nowrap;
+      }
+      pre {
+        margin-top: 0;
+        margin-left: 10px;
+        overflow-x: auto;
+        white-space: pre-wrap;
+      }
+    </style>
+  </body>
+</html>
