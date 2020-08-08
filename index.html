@@ -3,12 +3,12 @@
   <head>
     <script src="https://unpkg.com/vue"></script>
     <script src="https://unpkg.com/lodash"></script>
-    <!--script type="module">import { YAML } from 'https://unpkg.com/yaml/browser/dist/index.js'; window.YAML = YAML</script-->
+    <script src="http://coffeescript.org/v2/browser-compiler-legacy/coffeescript.js"></script>
+    <script type="module">import { YAML } from 'https://unpkg.com/yaml/browser/dist/index.js'; window.YAML = YAML</script>
   </head>
 
   <body>
-
-    <div id="editor-1" class="editor">
+    <div class="editor">
       <title>{{ title }}</title>
 
       <h2>{{ title }}</h2>
@@ -31,39 +31,30 @@
       </div>
     </div>
 
-    <script type="module">
-      import { YAML } from 'https://unpkg.com/yaml/browser/dist/index.js';
-      Vue.directive('focus', {
-	inserted: function (el) { el.focus(); },
-      })
-      new Vue({
-        el: "#editor-1",
-        data: {
-          title: 'YAML Interactive Editor',
-          input: 'foo: 123\nbar: 456\n',
-          error: '',
-        },
-        computed: {
-          json: function() {
-            var json;
-            try {
-              json = YAML.parseAllDocuments(this.input).map(function(doc) {
-                if (doc.errors.length !== 0) throw doc.errors[0];
-                return JSON.stringify(doc.toJSON(), null, 2) + '\n';
-              }).join('');
-            }
-            catch(err) {
-              json = '<span style="color:red">' + err + '</span>';
-            }
-            return json;
-          }
-        },
-        methods: {
-          update: _.debounce(function(e) {
-            this.input = e.target.value;
-          }, 500),
-        }
-      });
+    <script type="text/coffeescript">
+      Vue.directive 'focus',
+        inserted: (el)-> el.focus()
+
+      new Vue
+        el: ".editor"
+        data:
+          title: 'YAML Interactive Editor'
+          input: 'foo: 123\nbar: 456\n'
+          error: ''
+        computed:
+          json: ->
+            try
+              json = YAML.parseAllDocuments(this.input).map (doc)->
+                if doc.errors.length != 0 then throw doc.errors[0]
+                JSON.stringify(doc.toJSON(), null, 2) + '\n'
+              .join ''
+            catch err
+              json = "<span style=\"color:red\">#{err}</span>"
+            json
+        methods:
+          update: _.debounce (e)->
+            this.input = e.target.value
+          , 500
     </script>
 
     <style>
